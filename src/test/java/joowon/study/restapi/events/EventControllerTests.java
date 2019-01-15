@@ -71,4 +71,39 @@ public class EventControllerTests {
                 .andExpect(jsonPath("eventStatus").value(EventStatus.DRAFT.name()));
     }
 
+    @Test
+    public void createEvent_Bad_Request() throws Exception {
+        Event event = Event.builder()
+                .id(100)
+                .name("Spring")
+                .description("REST API Development with Spring")
+                .beginEnrollmentDateTime(LocalDateTime.of(2018, 11, 1, 9, 18))
+                .closeEnrollmentDateTime(LocalDateTime.of(2018, 11, 2, 9, 18))
+                .beginEventDateTime(LocalDateTime.of(2018, 11, 3, 9, 18))
+                .endEventDateTime(LocalDateTime.of(2018, 11, 4, 9, 18))
+                .basePrice(100)
+                .maxPrice(200)
+                .limitOfEnrollment(100)
+                .location("안양역")
+                .free(true)
+                .offline(false)
+                .eventStatus(EventStatus.PUBLISHED)
+                .build();
+
+//        event.setId(10);
+//        Mockito.when(eventRepository.save(event)).thenReturn(event);
+
+        mockMvc.perform(post("/api/events/")  // perform = 요청
+                .contentType(MediaType.APPLICATION_JSON_UTF8)
+                .accept(MediaTypes.HAL_JSON)
+                .content(objectMapper.writeValueAsString(event)))
+                .andDo(print())
+                .andExpect(status().isBadRequest());
+//                .andExpect(header().exists(HttpHeaders.LOCATION))
+//                .andExpect(header().string(HttpHeaders.CONTENT_TYPE, MediaTypes.HAL_JSON_UTF8_VALUE))
+//                .andExpect(jsonPath("id").value(Matchers.not(100)))
+//                .andExpect(jsonPath("free").value(Matchers.not(true)))
+//                .andExpect(jsonPath("eventStatus").value(EventStatus.DRAFT.name()));
+    }
+
 }
