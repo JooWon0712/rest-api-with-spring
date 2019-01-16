@@ -1,8 +1,10 @@
 package joowon.study.restapi.config;
 
 import joowon.study.restapi.accounts.Account;
+import joowon.study.restapi.accounts.AccountRepository;
 import joowon.study.restapi.accounts.AccountRole;
 import joowon.study.restapi.accounts.AccountService;
+import joowon.study.restapi.common.AppProperties;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.ApplicationArguments;
@@ -34,14 +36,24 @@ public class AppConfig {
             @Autowired
             AccountService accountService;
 
+            @Autowired
+            AppProperties appProperties;
+
             @Override
             public void run(ApplicationArguments args) throws Exception {
-                Account joowon = Account.builder()
-                        .email("joowon0712@email.com")
-                        .password("joowon")
+                Account admin = Account.builder()
+                        .email(appProperties.getAdminUsername())
+                        .password(appProperties.getAdminPassword())
                         .roles(Set.of(AccountRole.ADMIN, AccountRole.USER))
                         .build();
-                accountService.saveAccount(joowon);
+                accountService.saveAccount(admin);
+
+                Account user = Account.builder()
+                        .email(appProperties.getUserUsername())
+                        .password(appProperties.getUserPassword())
+                        .roles(Set.of(AccountRole.USER))
+                        .build();
+                accountService.saveAccount(user);
             }
         };
     }

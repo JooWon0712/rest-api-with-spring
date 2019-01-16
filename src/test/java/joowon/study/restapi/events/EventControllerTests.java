@@ -4,6 +4,7 @@ import joowon.study.restapi.accounts.Account;
 import joowon.study.restapi.accounts.AccountRepository;
 import joowon.study.restapi.accounts.AccountRole;
 import joowon.study.restapi.accounts.AccountService;
+import joowon.study.restapi.common.AppProperties;
 import joowon.study.restapi.common.BaseControllerTest;
 import joowon.study.restapi.common.TestDescription;
 import org.junit.Before;
@@ -44,8 +45,12 @@ public class EventControllerTests extends BaseControllerTest {
     @Autowired
     AccountRepository accountRepository;
 
+    @Autowired
+    AppProperties appProperties;
+
     @Before
     public void setup() {
+        System.out.println("##############################################");
         this.eventRepository.deleteAll();
         this.accountRepository.deleteAll();
     }
@@ -139,23 +144,18 @@ public class EventControllerTests extends BaseControllerTest {
 
     private String getAccessToken() throws Exception {
         // Given
-        String username = "admin@email.com";
-        String password = "admin";
         Account admin = Account.builder()
-                .email(username)
-                .password(password)
+                .email(appProperties.getUserUsername())
+                .password(appProperties.getUserPassword())
                 .roles(Set.of(AccountRole.ADMIN, AccountRole.USER))
                 .build();
         this.accountService.saveAccount(admin);
 
-        String clientId = "myApp";
-        String cliendSecret = "pass";
-
         // When & Then
         ResultActions resultActions = this.mockMvc.perform(post("/oauth/token")
-                .with(httpBasic(clientId, cliendSecret))
-                .param("username", username)
-                .param("password", password)
+                .with(httpBasic(appProperties.getClintId(), appProperties.getClientSecret()))
+                .param("username", appProperties.getUserUsername())
+                .param("password", appProperties.getUserPassword())
                 .param("grant_type","password"));
 
         var responseBody = resultActions.andReturn().getResponse().getContentAsString();
