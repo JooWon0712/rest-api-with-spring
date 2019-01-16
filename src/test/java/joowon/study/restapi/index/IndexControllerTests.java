@@ -15,5 +15,5 @@ public class IndexControllerTests extends BaseControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("_links.events").exists());
     }
-    
+
 }
