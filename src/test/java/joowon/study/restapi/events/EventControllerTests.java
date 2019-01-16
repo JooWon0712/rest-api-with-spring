@@ -50,7 +50,6 @@ public class EventControllerTests extends BaseControllerTest {
 
     @Before
     public void setup() {
-        System.out.println("##############################################");
         this.eventRepository.deleteAll();
         this.accountRepository.deleteAll();
     }
@@ -297,6 +296,78 @@ public class EventControllerTests extends BaseControllerTest {
                                 fieldWithPath("page.totalPages").description("총 페이지 수"),
                                 fieldWithPath("page.number").description("현재 페이지 번호(페이지 번호는 0부터 시작)"))
                         ))
+        ;
+    }
+
+    @Test
+    @TestDescription("30개 이벤트를 10개씩 두번째 페이지 조회하기(인증후)")
+    public void queryEventsWithAuthentication() throws Exception {
+        // Given
+        IntStream.range(0, 30).forEach(this::generateEvent);
+
+        // When
+        this.mockMvc.perform(get("/api/events")
+                .header(HttpHeaders.AUTHORIZATION, getBearerToken())
+                .param("page", "1")
+                .param("size", "10")
+                .param("sort","name,DESC"))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("page").exists())
+                .andExpect(jsonPath("_embedded.eventList[0]._links.self").exists())
+                .andExpect(jsonPath("_links.self").exists())
+                .andExpect(jsonPath("_links.create-event").exists())
+                .andExpect(jsonPath("_links.profile").exists())
+                .andDo(document("query-events"
+                        ,links(linkWithRel("self").description("link to self"),
+                                linkWithRel("create-event").description("이벤트 생성"),
+                                linkWithRel("first").description("첫번째 페이지 링크"),
+                                linkWithRel("prev").description("이번 페이지 링크"),
+                                linkWithRel("self").description("현재 페이지 링크"),
+                                linkWithRel("next").description("다음 페이지 링크"),
+                                linkWithRel("last").description("마지막 페이지 링크"),
+                                linkWithRel("profile").description("프로파일 링크")
+                        )
+                        ,requestParameters(
+                                parameterWithName("page").description("페이지 번호"),
+                                parameterWithName("size").description("한 페이지 크기"),
+                                parameterWithName("sort").description("정렬 옵션 (ex : name,DESC )")
+                        )
+                        ,responseHeaders(
+                                headerWithName(HttpHeaders.CONTENT_TYPE).description("content type header")
+                        )
+                        ,responseFields(
+                                fieldWithPath("_embedded.eventList[].id").description("identifier of new event"),
+                                fieldWithPath("_embedded.eventList[].name").description("name of new event"),
+                                fieldWithPath("_embedded.eventList[].description").description("description of new event"),
+                                fieldWithPath("_embedded.eventList[].beginEnrollmentDateTime").description("date time of begin enrollment"),
+                                fieldWithPath("_embedded.eventList[].closeEnrollmentDateTime").description("date time of close enrollment"),
+                                fieldWithPath("_embedded.eventList[].beginEventDateTime").description("date time of begin event"),
+                                fieldWithPath("_embedded.eventList[].endEventDateTime").description("date time of end event"),
+                                fieldWithPath("_embedded.eventList[].location").description("location of new event"),
+                                fieldWithPath("_embedded.eventList[].basePrice").description("base price of new event"),
+                                fieldWithPath("_embedded.eventList[].maxPrice").description("max price of new event"),
+                                fieldWithPath("_embedded.eventList[].limitOfEnrollment").description("limit of enrollment"),
+                                fieldWithPath("_embedded.eventList[].offline").description("it tells if this event is offline or not"),
+                                fieldWithPath("_embedded.eventList[].free").description("it tells if this event is free or not"),
+                                fieldWithPath("_embedded.eventList[].eventStatus").description("event status"),
+                                fieldWithPath("_embedded.eventList[].manager").description("manager"),
+                                fieldWithPath("_embedded.eventList[]._links.self.href").description("event status"),
+//                                fieldWithPath("_embedded.eventList[]._links.create-event.href").description("create-event"),
+
+                                fieldWithPath("_links.first.href").description("첫번째 페이지 링크"),
+                                fieldWithPath("_links.prev.href").description("이번 페이지 링크"),
+                                fieldWithPath("_links.self.href").description("현재 페이지 링크"),
+                                fieldWithPath("_links.next.href").description("다음 페이지 링크"),
+                                fieldWithPath("_links.last.href").description("마지막 페이지 링크"),
+                                fieldWithPath("_links.profile.href").description("프로필 링크"),
+                                fieldWithPath("_links.create-event.href").description("이벤트 생성"),
+
+                                fieldWithPath("page.size").description("한 페이지 크기"),
+                                fieldWithPath("page.totalElements").description("총 이벤트 수"),
+                                fieldWithPath("page.totalPages").description("총 페이지 수"),
+                                fieldWithPath("page.number").description("현재 페이지 번호(페이지 번호는 0부터 시작)"))
+                ))
         ;
     }
 
