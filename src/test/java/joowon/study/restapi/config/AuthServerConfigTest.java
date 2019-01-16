@@ -38,6 +38,7 @@ public class AuthServerConfigTest extends BaseControllerTest {
         String clientId = "myApp";
         String cliendSecret = "pass";
 
+        // When & Then
         this.mockMvc.perform(post("/oauth/token")
                     .with(httpBasic(clientId, cliendSecret))
                     .param("username", username)
