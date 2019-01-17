@@ -37,15 +37,15 @@ public class EventController {
     }
 
     @PostMapping
-    public ResponseEntity createEvent(@RequestBody @Valid EventDto eventDto, Errors errors, @CurrentUser Account currentUser) {
-
-        if(errors.hasErrors()) {
+    public ResponseEntity createEvent(@RequestBody @Valid EventDto eventDto,
+                                      Errors errors,
+                                      @CurrentUser Account currentUser) {
+        if (errors.hasErrors()) {
             return badRequest(errors);
         }
 
         eventValidator.validate(eventDto, errors);
-
-        if(errors.hasErrors()) {
+        if (errors.hasErrors()) {
             return badRequest(errors);
         }
 
@@ -55,75 +55,79 @@ public class EventController {
         Event newEvent = this.eventRepository.save(event);
 
         ControllerLinkBuilder selfLinkBuilder = linkTo(EventController.class).slash(newEvent.getId());
-        URI createUri = selfLinkBuilder.toUri();
+        URI createdUri = selfLinkBuilder.toUri();
         EventResource eventResource = new EventResource(event);
         eventResource.add(linkTo(EventController.class).withRel("query-events"));
         eventResource.add(selfLinkBuilder.withRel("update-event"));
         eventResource.add(new Link("/docs/index.html#resources-events-create").withRel("profile"));
-        return ResponseEntity.created(createUri).body(eventResource);
+        return ResponseEntity.created(createdUri).body(eventResource);
     }
 
     @GetMapping
-    public ResponseEntity queryEvents(Pageable pageable, PagedResourcesAssembler<Event> assembler, @CurrentUser Account account) {
-        Page<Event> eventsPage = this.eventRepository.findAll(pageable);
-        var pagedResources = assembler.toResource(eventsPage, event -> new EventResource(event));
+    public ResponseEntity queryEvents(Pageable pageable,
+                                      PagedResourcesAssembler<Event> assembler,
+                                      @CurrentUser Account account) {
+        Page<Event> page = this.eventRepository.findAll(pageable);
+        var pagedResources = assembler.toResource(page, e -> new EventResource(e));
         pagedResources.add(new Link("/docs/index.html#resources-events-list").withRel("profile"));
-
-        if(account != null) {
+        if (account != null) {
             pagedResources.add(linkTo(EventController.class).withRel("create-event"));
         }
-
         return ResponseEntity.ok(pagedResources);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity getEvent(@PathVariable Integer id, @CurrentUser Account currentUser){
+    public ResponseEntity getEvent(@PathVariable Integer id,
+                                   @CurrentUser Account currentUser) {
         Optional<Event> optionalEvent = this.eventRepository.findById(id);
-
-        if(optionalEvent.isEmpty()) {
+        if (optionalEvent.isEmpty()) {
             return ResponseEntity.notFound().build();
         }
 
         Event event = optionalEvent.get();
         EventResource eventResource = new EventResource(event);
         eventResource.add(new Link("/docs/index.html#resources-events-get").withRel("profile"));
-
-        if(event.getManager().equals(currentUser)) {
+        if (event.getManager().equals(currentUser)) {
             eventResource.add(linkTo(EventController.class).slash(event.getId()).withRel("update-event"));
         }
+
         return ResponseEntity.ok(eventResource);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity updateEvent(@PathVariable Integer id, @RequestBody @Valid EventDto eventDto, Errors errors, @CurrentUser Account currentUser) {
+    public ResponseEntity updateEvent(@PathVariable Integer id,
+                                      @RequestBody @Valid EventDto eventDto,
+                                      Errors errors,
+                                      @CurrentUser Account currentUser) {
         Optional<Event> optionalEvent = this.eventRepository.findById(id);
-        if(optionalEvent.isEmpty()) {
+        if (optionalEvent.isEmpty()) {
             return ResponseEntity.notFound().build();
         }
 
-        if(errors.hasErrors()) {
+        if (errors.hasErrors()) {
             return badRequest(errors);
         }
 
         this.eventValidator.validate(eventDto, errors);
-        if(errors.hasErrors()) {
+        if (errors.hasErrors()) {
             return badRequest(errors);
         }
 
         Event existingEvent = optionalEvent.get();
-        if(existingEvent.getManager().equals(currentUser)){
+        if (!existingEvent.getManager().equals(currentUser)) {
             return new ResponseEntity(HttpStatus.UNAUTHORIZED);
         }
-        this.modelMapper.map(eventDto, existingEvent);
-        Event saveEvent = this.eventRepository.save(existingEvent);
 
-        EventResource eventResource = new EventResource(saveEvent);
+        this.modelMapper.map(eventDto, existingEvent);
+        Event savedEvent = this.eventRepository.save(existingEvent);
+
+        EventResource eventResource = new EventResource(savedEvent);
         eventResource.add(new Link("/docs/index.html#resources-events-update").withRel("profile"));
 
         return ResponseEntity.ok(eventResource);
     }
 
-    private ResponseEntity<ErrorsResource> badRequest(Errors errors) {
+    private ResponseEntity badRequest(Errors errors) {
         return ResponseEntity.badRequest().body(new ErrorsResource(errors));
     }
 }

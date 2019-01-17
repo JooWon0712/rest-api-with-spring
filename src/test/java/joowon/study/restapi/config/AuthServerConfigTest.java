@@ -31,7 +31,7 @@ public class AuthServerConfigTest extends BaseControllerTest {
     public void getAuthToken() throws Exception {
         // When & Then
         this.mockMvc.perform(post("/oauth/token")
-                    .with(httpBasic(appProperties.getClintId(), appProperties.getClientSecret()))
+                    .with(httpBasic(appProperties.getClientId(), appProperties.getClientSecret()))
                     .param("username", appProperties.getUserUsername())
                     .param("password", appProperties.getUserPassword())
                     .param("grant_type","password"))

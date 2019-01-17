@@ -25,7 +25,7 @@ public class AppProperties {
     private String userPassword;
 
     @NotEmpty
-    private String clintId;
+    private String clientId;
 
     @NotEmpty
     private String clientSecret;

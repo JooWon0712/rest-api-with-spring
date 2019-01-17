@@ -40,9 +40,9 @@ public class AuthServerConfig extends AuthorizationServerConfigurerAdapter {
     @Override
     public void configure(ClientDetailsServiceConfigurer clients) throws Exception {
         clients.inMemory()
-                .withClient(appProperties.getClintId())
-                .authorizedGrantTypes("password","refresh_token")
-                .scopes("read","write")
+                .withClient(appProperties.getClientId())
+                .authorizedGrantTypes("password", "refresh_token")
+                .scopes("read", "write")
                 .secret(this.passwordEncoder.encode(appProperties.getClientSecret()))
                 .accessTokenValiditySeconds(10 * 60)
                 .refreshTokenValiditySeconds(6 * 10 * 60);

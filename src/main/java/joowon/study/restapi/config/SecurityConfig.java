@@ -46,19 +46,6 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     @Override
     public void configure(WebSecurity web) throws Exception {
         web.ignoring().mvcMatchers("/docs/index.html");
-        // static resources는 spring security 적용 안함.
         web.ignoring().requestMatchers(PathRequest.toStaticResources().atCommonLocations());
-    }
-
-    @Override
-    protected void configure(HttpSecurity http) throws Exception {
-        http
-            .anonymous()
-                .and()
-            .formLogin()
-                .and()
-            .authorizeRequests()
-                .mvcMatchers(HttpMethod.GET, "/api/**").authenticated()
-                .anyRequest().authenticated();
     }
 }

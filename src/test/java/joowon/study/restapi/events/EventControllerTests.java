@@ -13,11 +13,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.hateoas.MediaTypes;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.security.oauth2.common.util.Jackson2JsonParser;
 import org.springframework.test.web.servlet.ResultActions;
 
 import java.time.LocalDateTime;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.IntStream;
 
@@ -52,6 +54,13 @@ public class EventControllerTests extends BaseControllerTest {
     public void setup() {
         this.eventRepository.deleteAll();
         this.accountRepository.deleteAll();
+
+        Account admin = Account.builder()
+                .email(appProperties.getUserUsername())
+                .password(appProperties.getUserPassword())
+                .roles(Set.of(AccountRole.ADMIN, AccountRole.USER))
+                .build();
+        this.accountService.saveAccount(admin);
     }
 
     @Test
@@ -135,31 +144,6 @@ public class EventControllerTests extends BaseControllerTest {
                                     fieldWithPath("_links.profile.href").description("link to update an existing")
                             )
                 ));
-    }
-
-    private String getBearerToken() throws Exception {
-        return "Bearer " + getAccessToken();
-    }
-
-    private String getAccessToken() throws Exception {
-        // Given
-        Account admin = Account.builder()
-                .email(appProperties.getUserUsername())
-                .password(appProperties.getUserPassword())
-                .roles(Set.of(AccountRole.ADMIN, AccountRole.USER))
-                .build();
-        this.accountService.saveAccount(admin);
-
-        // When & Then
-        ResultActions resultActions = this.mockMvc.perform(post("/oauth/token")
-                .with(httpBasic(appProperties.getClintId(), appProperties.getClientSecret()))
-                .param("username", appProperties.getUserUsername())
-                .param("password", appProperties.getUserPassword())
-                .param("grant_type","password"));
-
-        var responseBody = resultActions.andReturn().getResponse().getContentAsString();
-        Jackson2JsonParser jsonParser = new Jackson2JsonParser();
-        return jsonParser.parseMap(responseBody).get("access_token").toString();
     }
 
     @Test
@@ -375,7 +359,7 @@ public class EventControllerTests extends BaseControllerTest {
     @TestDescription("기존 이벤트 하나 조회하기")
     public void getEvent() throws Exception {
         // Given
-        Event event = this.generateEvent(100);
+        Event event = this.generateEventManager(100);
 
         // When & Then
         this.mockMvc.perform(get("/api/events/{id}", event.getId()))
@@ -399,10 +383,10 @@ public class EventControllerTests extends BaseControllerTest {
     @TestDescription("이벤트를 정상적으로 수정하기")
     public void updateEvent() throws Exception {
         // Given
-        Event event = this.generateEvent(200);
+        Event event = this.generateEventManager(200);
 
         EventDto eventDto = this.modelMapper.map(event, EventDto.class);
-        String eventName = "update event";
+        String eventName = "Updated event";
         eventDto.setName(eventName);
 
         // When & Then
@@ -473,6 +457,7 @@ public class EventControllerTests extends BaseControllerTest {
     }
 
     private Event generateEvent(int index) {
+
         Event event = Event.builder()
                 .name("event "+index)
                 .description("test event")
@@ -492,4 +477,44 @@ public class EventControllerTests extends BaseControllerTest {
         return this.eventRepository.save(event);
     }
 
+    private String getBearerToken() throws Exception {
+        return "Bearer " + getAccessToken();
+    }
+
+    private String getAccessToken() throws Exception {
+        // When & Then
+        ResultActions resultActions = this.mockMvc.perform(post("/oauth/token")
+                .with(httpBasic(appProperties.getClientId(), appProperties.getClientSecret()))
+                .param("username", appProperties.getUserUsername())
+                .param("password", appProperties.getUserPassword())
+                .param("grant_type","password"));
+
+        var responseBody = resultActions.andReturn().getResponse().getContentAsString();
+        Jackson2JsonParser jsonParser = new Jackson2JsonParser();
+        return jsonParser.parseMap(responseBody).get("access_token").toString();
+    }
+
+    private Event generateEventManager(int index) {
+        Optional<Account> getAccount = accountRepository.findByEmail(appProperties.getUserUsername());
+        Account user = getAccount.get();
+
+        Event event = Event.builder()
+                .name("event "+index)
+                .description("test event")
+                .beginEnrollmentDateTime(LocalDateTime.of(2018, 11, 1, 9, 18))
+                .closeEnrollmentDateTime(LocalDateTime.of(2018, 11, 2, 9, 18))
+                .beginEventDateTime(LocalDateTime.of(2018, 11, 3, 9, 18))
+                .endEventDateTime(LocalDateTime.of(2018, 11, 4, 9, 18))
+                .basePrice(100)
+                .maxPrice(200)
+                .limitOfEnrollment(100)
+                .location("안양역")
+                .free(false)
+                .offline(true)
+                .eventStatus(EventStatus.DRAFT)
+                .manager(user)
+                .build();
+
+        return this.eventRepository.save(event);
+    }
 }

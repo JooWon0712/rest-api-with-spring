@@ -12,37 +12,36 @@ import java.io.IOException;
 public class ErrorsSerializer extends JsonSerializer<Errors> {
 
     @Override
-    public void serialize(Errors errors, JsonGenerator jsonGenerator, SerializerProvider serializerProvider) throws IOException {
-        jsonGenerator.writeStartArray();
-        errors.getFieldErrors().stream().forEach(e ->{
+    public void serialize(Errors errors, JsonGenerator gen, SerializerProvider serializers) throws IOException {
+        gen.writeStartArray();
+        errors.getFieldErrors().forEach(e -> {
             try {
-                jsonGenerator.writeStartObject();
-                jsonGenerator.writeStringField("field", e.getField());
-                jsonGenerator.writeStringField("objectName", e.getObjectName());
-                jsonGenerator.writeStringField("code", e.getCode());
-                jsonGenerator.writeStringField("defaultMessage", e.getDefaultMessage());
+                gen.writeStartObject();
+                gen.writeStringField("field", e.getField());
+                gen.writeStringField("objectName", e.getObjectName());
+                gen.writeStringField("code", e.getCode());
+                gen.writeStringField("defaultMessage", e.getDefaultMessage());
                 Object rejectedValue = e.getRejectedValue();
-                if(rejectedValue != null) {
-                    jsonGenerator.writeStringField("rejectedValue", rejectedValue.toString());
+                if (rejectedValue != null) {
+                    gen.writeStringField("rejectedValue", rejectedValue.toString());
                 }
-                jsonGenerator.writeEndObject();
-            }catch (IOException e1) {
+                gen.writeEndObject();
+            } catch (IOException e1) {
                 e1.printStackTrace();
             }
         });
 
-        errors.getGlobalErrors().forEach(e ->{
+        errors.getGlobalErrors().forEach(e -> {
             try {
-                jsonGenerator.writeStartObject();
-                jsonGenerator.writeStringField("objectName", e.getObjectName());
-                jsonGenerator.writeStringField("code", e.getCode());
-                jsonGenerator.writeStringField("defaultMessage", e.getDefaultMessage());
-                jsonGenerator.writeEndObject();
-            }catch (IOException e1) {
+                gen.writeStartObject();
+                gen.writeStringField("objectName", e.getObjectName());
+                gen.writeStringField("code", e.getCode());
+                gen.writeStringField("defaultMessage", e.getDefaultMessage());
+                gen.writeEndObject();
+            } catch (IOException e1) {
                 e1.printStackTrace();
             }
         });
-
-        jsonGenerator.writeEndArray();
+        gen.writeEndArray();
     }
 }
