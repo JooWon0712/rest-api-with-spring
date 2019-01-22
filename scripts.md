@@ -11,7 +11,7 @@ Here, I memo scripts that I have used during development.
 -p : 맵핑할 포트 번호
 -e : 환경변수 셋팅
 -d : 데몬 모드로 실행
-docker run --name rest -p 5432:5432 -e POSTGRES_PASSWORD=pass -d postgres
+docker run --name rest_postgres -p 5432:5432 -e POSTGRES_PASSWORD=pass -d postgres
 
 ```
 
