@@ -11,7 +11,7 @@ Here, I memo scripts that I have used during development.
 -p : 맵핑할 포트 번호
 -e : 환경변수 셋팅
 -d : 데몬 모드로 실행
-docker run --name rest_postgres -p 5432:5432 -e POSTGRES_PASSWORD=pass -d postgres
+docker run --name test_postgres -p 5432:5432 -e POSTGRES_PASSWORD=pass -d postgres
 
 ```
 
@@ -27,7 +27,7 @@ This cmdlet will create Postgres instance so that you can connect to a database 
 -i : interactive 모드 실행
 -t : 타겟 지정(컨테이너)
 
-docker exec -i -t rest bash
+docker exec -i -t test_postgres bash
 ```
 
 Then you will see the containers bash as a root user.
